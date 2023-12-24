@@ -1,11 +1,12 @@
 # main.py
-from fastapi import FastAPI
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import FastAPI, Body
+from app.db import question_collection, question_helper
 
 app = FastAPI()
 
-@app.get("/")
-async def read_root():
-    return {"Hello": "World"}
+@app.post("/preguntas/")
+async def add_question(pregunta: dict = Body(...)):
+    new_question = await question_collection.insert_one(pregunta)
+    created_question = await question_collection.find_one({"_id": new_question.inserted_id})
+    return question_helper(created_question)
 
-# Imagina que aquí agregarás más rutas y lógica para conectarte a MongoDB.
