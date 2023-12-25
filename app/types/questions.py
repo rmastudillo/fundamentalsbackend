@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from app.types.answers import Answer
 from bson import ObjectId
-from pydantic import BaseModel, Field, validator, ValidationError
+from pydantic import BaseModel, Field, validator, ValidationError, root_validator
 
 
 class PyObjectId(ObjectId):
@@ -30,7 +30,7 @@ class Question(BaseModel):
     content: str
     question_text: str
     answer_options: List[Answer]  # Modificado para usar el modelo Answer
-    correct_answer: str
+    correct_answer: Optional[int] = None
     hint_list: List[str]
     answer_solved_list: List[str]
     difficulty: str
@@ -60,27 +60,22 @@ class Question(BaseModel):
         }
 
     @validator("answer_options", pre=True, each_item=False)
-    def assign_ids_to_answers(cls, answer_options):
+    def assign_ids_to_answers(cls, values):
         validated_answers = []
-        for index, answer in enumerate(answer_options):
-            # Asegúrate de que 'answer' es un diccionario
+        for index, answer in enumerate(values):
             answer_dict = answer if isinstance(answer, dict) else answer.dict()
             answer_dict["id"] = index + 1
-            # Asigna automáticamente un ID basado en el orden de la lista (1-4)
-
             try:
-                # Valida y convierte el diccionario a una instancia de Answer
                 validated_answer = Answer(**answer_dict)
                 validated_answers.append(validated_answer)
             except ValidationError as e:
                 raise ValueError(f"Error al validar respuesta: {e}")
-
         return validated_answers
 
-    @validator("answer_options")
-    def check_unique_answer_ids(cls, answer_options):
-        # Verificar que los identificadores de las respuestas sean únicos
-        ids = [answer.id for answer in answer_options]
-        if len(ids) != len(set(ids)):
-            raise ValueError("Answer IDs must be unique.")
-        return answer_options
+    @validator("correct_answer", always=True, pre=False)
+    def set_correct_answer(cls, v, values):
+        if "answer_options" in values:
+            for answer in values["answer_options"]:
+                if answer.is_correct:
+                    return answer.id
+        return v
