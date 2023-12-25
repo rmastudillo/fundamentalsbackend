@@ -21,7 +21,7 @@ class PyObjectId(ObjectId):
 
 
 class Question(BaseModel):
-    id: Optional[PyObjectId] = None
+    id: Optional[PyObjectId] = Field(alias="_id")
     module: str
     topic: str
     course: str
@@ -37,6 +37,7 @@ class Question(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+        allow_population_by_field_name = True
         schema_extra = {
             "example": {
                 "module": "Module 1",
