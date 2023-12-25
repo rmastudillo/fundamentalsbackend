@@ -35,7 +35,9 @@ async def get_questions():
             question_data = question_helper(question)
             questions.append(question_data)
     except Exception as error:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(error)}")
+        raise HTTPException(
+            status_code=500, detail=f"Internal server error: {str(error)}"
+        )
     return questions
 
 
