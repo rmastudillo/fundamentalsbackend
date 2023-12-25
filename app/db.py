@@ -17,6 +17,7 @@ question_collection = database.get_collection(
 
 # Función para obtener la colección de preguntas
 def question_helper(question) -> Question:
-    question_dict = question.copy()
-    question_dict["id"] = str(question_dict.pop("_id", None))
+    print('ERROR',question)
+    question_dict = question.copy()  # Asegúrate de que 'question' es un diccionario
+    question_dict["id"] = str(question_dict.pop("_id", None))  # Convertir ObjectId a str
     return Question(**question_dict)

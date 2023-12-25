@@ -14,8 +14,12 @@ app = FastAPI()
     description="Crea una nueva pregunta y la almacena en la base de datos.",
 )
 async def add_question(question: Question = Body(...)):
-    new_question = await question_collection.insert_one(question.dict())
-    print(new_question)
+    question_data = question.dict()
+    if 'id' in question_data and question_data['id'] is None:
+        del question_data['id']
+
+    # Insertar en la base de datos
+    new_question = await question_collection.insert_one(question_data)
     created_question = await question_collection.find_one(
         {"_id": new_question.inserted_id}
     )
@@ -32,7 +36,7 @@ async def get_questions():
     questions = []
     try:
         async for question in question_collection.find():
-            question_data = question_helper(question)
+            question_data = question_helper(question)  # Asegúrate de que 'question' es un documento de MongoDB
             questions.append(question_data)
     except Exception as error:
         raise HTTPException(
