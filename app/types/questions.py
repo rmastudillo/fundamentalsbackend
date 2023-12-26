@@ -1,10 +1,11 @@
 from typing import List, Optional
 
-from app.types.answers import Answer
+from app.types.answers import Answer  # Asegúrate de que esta ruta es correcta
 from bson import ObjectId
-from pydantic import BaseModel, Field, validator, ValidationError, root_validator
+from pydantic import BaseModel, Field, root_validator, validator
 
 
+# Clase PyObjectId para convertir ObjectId de MongoDB a un formato compatible con Pydantic
 class PyObjectId(ObjectId):
     @classmethod
     def __get_validators__(cls):
@@ -21,6 +22,7 @@ class PyObjectId(ObjectId):
         field_schema.update(type="string")
 
 
+# Modelo para representar una pregunta y sus respuestas
 class Question(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id")
     module: str
@@ -29,8 +31,8 @@ class Question(BaseModel):
     source: str
     content: str
     question_text: str
-    answer_options: List[Answer]  # Modificado para usar el modelo Answer
-    correct_answer: Optional[int] = None
+    answer_options: List[Answer]  # Lista de respuestas (modelo Answer)
+    correct_answer_index: Optional[int] = None  # Índice de la respuesta correcta
     hint_list: List[str]
     answer_solved_list: List[str]
     difficulty: str
@@ -39,43 +41,22 @@ class Question(BaseModel):
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
         allow_population_by_field_name = True
-        schema_extra = {
-            "example": {
-                "module": "Module 1",
-                "topic": "Topic 1",
-                "course": "Course 1",
-                "source": "Source 1",
-                "content": "Content 1",
-                "question_text": "What is ...?",
-                "answer_options": [  # Modificado para incluir objetos de tipo Answer
-                    {"answer_text": "Option 1", "is_correct": False},
-                    {"answer_text": "Option 2", "is_correct": True},
-                    # ... más respuestas según sea necesario
-                ],
-                "correct_answer": "Option 1",
-                "hint_list": ["Hint 1", "Hint 2"],
-                "answer_solved_list": ["Solution 1"],
-                "difficulty": "Easy",
-            }
-        }
 
-    @validator("answer_options", pre=True, each_item=False)
-    def assign_ids_to_answers(cls, values):
-        validated_answers = []
-        for index, answer in enumerate(values):
-            answer_dict = answer if isinstance(answer, dict) else answer.dict()
-            answer_dict["id"] = index + 1
-            try:
-                validated_answer = Answer(**answer_dict)
-                validated_answers.append(validated_answer)
-            except ValidationError as e:
-                raise ValueError(f"Error al validar respuesta: {e}")
-        return validated_answers
+    # Validador para asignar IDs automáticamente a las respuestas y determinar la correcta
+    @validator("answer_options", pre=True)
+    def process_answers(cls, answers):
+        for index, answer in enumerate(answers):
+            if isinstance(answer, dict):  # Convertir dict a Answer si es necesario
+                answer["id"] = index + 1  # Asignar ID basado en la posición
+        return answers
 
-    @validator("correct_answer", always=True, pre=False)
-    def set_correct_answer(cls, v, values):
-        if "answer_options" in values:
-            for answer in values["answer_options"]:
-                if answer.is_correct:
-                    return answer.id
-        return v
+    @root_validator
+    def set_correct_answer_index(cls, values):
+        answers = values.get("answer_options", [])
+        correct_index = None
+        for index, answer in enumerate(answers):
+            if answer.is_correct:
+                correct_index = index + 1
+                break  # Asumimos que solo hay una respuesta correcta
+        values["correct_answer_index"] = correct_index
+        return values
