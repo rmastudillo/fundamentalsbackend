@@ -1,8 +1,10 @@
 # fundamentalsbackend
-# Commands
-```
-uvicorn app.main:app --reload
+
+## Commands
+
+```python
 pip install -r requirements.txt
-source venv/bin/activate
 python3 -m venv venv
+source venv/bin/activate
+uvicorn app.main:app --reload
 ```
