@@ -2,5 +2,5 @@ fastapi
 uvicorn
 motor
 python-dotenv
-pydantic
+pydantic==2.5.3
 bson
