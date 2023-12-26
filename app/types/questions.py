@@ -33,7 +33,7 @@ class Question(BaseModel):
     topic: str
     course: str
     source: str
-    content: str
+    subject: str
     question_text: str
     answer_options: List[Answer]
     # Índice de la respuesta correcta

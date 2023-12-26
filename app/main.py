@@ -36,7 +36,8 @@ async def get_questions():
     questions = []
     try:
         async for question in question_collection.find():
-            question_data = question_helper(question)  # Asegúrate de que 'question' es un documento de MongoDB
+            # Asegúrate de que 'question' es un documento de MongoDB
+            question_data = question_helper(question)
             questions.append(question_data)
     except Exception as error:
         raise HTTPException(
