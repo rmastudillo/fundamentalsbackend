@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from bson import ObjectId
 from pydantic import BaseModel, Field, conint, validator
+from bson import ObjectId
 
 
 class Answer(BaseModel):
